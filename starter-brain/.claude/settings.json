@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [{ "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/engine/tools/brain.mjs\" hook start", "timeout": 20 }] }
+    ],
+    "UserPromptSubmit": [
+      { "hooks": [{ "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/engine/tools/brain.mjs\" hook prompt", "timeout": 10 }] }
+    ],
+    "PostToolUse": [
+      { "matcher": "Read|Grep|Glob", "hooks": [{ "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/engine/tools/brain.mjs\" hook tool", "timeout": 10 }] }
+    ],
+    "Stop": [
+      { "hooks": [{ "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/engine/tools/brain.mjs\" hook stop", "timeout": 60 }] }
+    ]
+  }
+}

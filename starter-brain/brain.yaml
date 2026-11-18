@@ -1,0 +1,6 @@
+# This file makes Claude Workspace list this folder as a brain.
+# "brain" is the short name; setup changes it. The app nickname is set in its pencil menu.
+brain: my-brain
+role: not set up
+owner: you
+engine: "1.0"

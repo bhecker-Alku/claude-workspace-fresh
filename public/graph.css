@@ -1,0 +1,18 @@
+/* Note-map palette. Five categorical slots in fixed order plus a neutral, checked with the dataviz
+   palette validator in light and dark. The only colors outside tokens.css besides jelly.css, and only for the graph. */
+:root {
+  --graph-hubs: #2a78d6;
+  --graph-risks: #eb6834;
+  --graph-facts: #1baf7a;
+  --graph-sources: #eda100;
+  --graph-decisions: #e87ba4;
+  --graph-other: #8a8984;
+}
+:root.dark {
+  --graph-hubs: #3987e5;
+  --graph-risks: #d95926;
+  --graph-facts: #199e70;
+  --graph-sources: #c98500;
+  --graph-decisions: #d55181;
+  --graph-other: #77766f;
+}

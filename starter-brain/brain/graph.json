@@ -1,0 +1,97 @@
+{
+  "generated": "2026-11-18T19:31:21.842Z",
+  "nodes": [
+    {
+      "id": "evals/memory-paths-basics",
+      "type": "eval",
+      "title": "Where does the brain look first",
+      "description": "Checks the brain knows its own memory paths.",
+      "path": "brain/evals/memory-paths-basics.md",
+      "status": "active",
+      "domain": "",
+      "uses": 0
+    },
+    {
+      "id": "log",
+      "type": "note",
+      "title": "Log",
+      "description": "What changed in this brain and when, newest first.",
+      "path": "brain/log.md",
+      "status": "active",
+      "domain": "",
+      "uses": 0
+    },
+    {
+      "id": "notes/using-this-brain/memory-paths",
+      "type": "howto",
+      "title": "Memory paths",
+      "description": "How the brain finds the right notes quickly - routing first, then hubs and links - and how it keeps getting faster.",
+      "path": "brain/notes/using-this-brain/memory-paths.md",
+      "status": "active",
+      "domain": "using-this-brain",
+      "uses": 0
+    },
+    {
+      "id": "notes/using-this-brain/teaching-the-brain",
+      "type": "howto",
+      "title": "Teaching the brain",
+      "description": "Three ways the brain learns - telling it in chat, giving it documents, and correcting it.",
+      "path": "brain/notes/using-this-brain/teaching-the-brain.md",
+      "status": "active",
+      "domain": "using-this-brain",
+      "uses": 0
+    },
+    {
+      "id": "notes/using-this-brain/_hub",
+      "type": "hub",
+      "title": "Using this brain",
+      "description": "How to teach this brain, change its role, and keep it healthy.",
+      "path": "brain/notes/using-this-brain/_hub.md",
+      "status": "active",
+      "domain": "using-this-brain",
+      "uses": 0
+    },
+    {
+      "id": "profile",
+      "type": "profile",
+      "title": "Profile",
+      "description": "Who this brain is - its role, who it helps, what it knows, how it talks and its limits.",
+      "path": "brain/profile.md",
+      "status": "draft",
+      "domain": "",
+      "uses": 0
+    }
+  ],
+  "edges": [
+    {
+      "source": "evals/memory-paths-basics",
+      "target": "notes/using-this-brain/memory-paths",
+      "kind": "related"
+    },
+    {
+      "source": "log",
+      "target": "profile",
+      "kind": "related"
+    },
+    {
+      "source": "notes/using-this-brain/memory-paths",
+      "target": "notes/using-this-brain/teaching-the-brain",
+      "kind": "link"
+    },
+    {
+      "source": "notes/using-this-brain/_hub",
+      "target": "notes/using-this-brain/memory-paths",
+      "kind": "hub"
+    },
+    {
+      "source": "notes/using-this-brain/_hub",
+      "target": "notes/using-this-brain/teaching-the-brain",
+      "kind": "hub"
+    },
+    {
+      "source": "profile",
+      "target": "notes/using-this-brain/_hub",
+      "kind": "domain"
+    }
+  ]
+}

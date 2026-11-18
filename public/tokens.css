@@ -1,0 +1,112 @@
+/*
+ * Design tokens for Claude Workspace: every color, size and radius the app uses.
+ * Branding (Account menu > Branding) overrides --air-accent and --air-ink at runtime.
+ */
+:root {
+  --air-bg: #F5F5F7;
+  --air-surface: #FFFFFF;
+  --air-raised: #FFFFFF;
+  --air-sunken: #FAFAFB;
+  --air-text: #1D1D1F;
+  --air-muted: #6E6E73;
+  --air-border: #E5E5EA;
+  --air-logo-ink: #1D1D1F;
+  --air-accent: #3B5BDB;
+  /* Text and links on the accent; derived, so a configured accent moves it in both themes. */
+  --air-accent-strong: color-mix(in srgb, var(--air-accent) 86%, black);
+  --air-on-accent: #FFFFFF;
+  --air-ok: #1A7F37;
+  --air-ok-bg: #E8F5EC;
+  --air-warn: #A35500;
+  --air-warn-bg: #FFF4E5;
+  --air-danger: #C4122D;
+  --air-danger-bg: #FDECEF;
+  --air-info: #2457C5;
+  --air-info-bg: #EAF0FC;
+  --air-ink-chip: #1D1D1F;
+  --air-ink-chip-text: #FFFFFF;
+  --air-hover: rgba(0, 0, 0, 0.04);
+  --air-sel: color-mix(in srgb, var(--air-accent) 7%, transparent);
+  /* Offset focus ring: a surface gap, then the accent. */
+  --air-ring: 0 0 0 2px var(--air-surface), 0 0 0 4px color-mix(in srgb, var(--air-accent) 70%, transparent);
+  /* Surfaces sit on rules, not on blur. */
+  --air-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --air-shadow-overlay: 0 16px 48px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.08);
+  --air-radius-control: 6px;
+  --air-radius-surface: 10px;
+  /* One height for side-by-side inputs, selects and buttons (AIR-28.59); sm for dense rows. */
+  --air-control-h: 36px;
+  --air-control-h-sm: 30px;
+  --air-ink: #0A0A0A;
+  --air-on-ink: #FFFFFF;
+  --air-ink-muted: rgba(255, 255, 255, 0.66);
+  --air-ink-rule: rgba(255, 255, 255, 0.14);
+  /* The commit colour: ink by default, so it never collides with danger or the accent. */
+  --air-primary: var(--air-ink);
+  --air-on-primary: #FFFFFF;
+  --air-primary-hover: #2C2C2E;
+  /* The heavy rule under page headers. */
+  --air-rule-strong: #1D1D1F;
+  /* The angle of the logo's A: active markers are skewed by it. */
+  --air-slant: -19.4deg;
+  /* Sans for all UI text and numbers; mono only for ids, keys, commands and URLs. */
+  --air-font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --air-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  /* Numbers (credits, counts) line up without a monospace font. */
+  --air-numeric: tabular-nums;
+  /* Six type sizes; nothing under 12 px (tests/design-tokens.test.ts keeps an 11 px floor). */
+  --air-type-caption: 12px;
+  --air-type-body: 14px;
+  --air-type-lead: 16px;
+  --air-type-h3: 20px;
+  --air-type-h2: 24px;
+  --air-type-h1: 32px;
+  /* Landing surfaces and sign-in only. */
+  --air-type-display: 44px;
+  --air-weight-regular: 500;
+  --air-weight-bold: 700;
+  /* Spacing scale. */
+  --air-s1: 4px;
+  --air-s2: 8px;
+  --air-s3: 12px;
+  --air-s4: 16px;
+  --air-s5: 24px;
+  --air-s6: 32px;
+  --air-s7: 48px;
+  --air-s8: 64px;
+  /* Motion; INTERACTIONS_AND_MOTION.md of the redesign package. */
+  --air-fast: 120ms;
+  --air-base: 180ms;
+  --air-slow: 240ms;
+  --air-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+html.dark {
+  --air-bg: #0B0B0C;
+  --air-surface: #161618;
+  --air-raised: #1C1C1F;
+  --air-sunken: #111113;
+  --air-text: #F5F5F7;
+  --air-muted: #C7C7CC;
+  --air-border: #3A3A3C;
+  --air-logo-ink: #FFFFFF;
+  --air-ok: #5BD07A;
+  --air-ok-bg: rgba(63, 185, 80, 0.14);
+  --air-warn: #F0B44C;
+  --air-warn-bg: rgba(227, 160, 8, 0.14);
+  --air-danger: #FF7085;
+  --air-danger-bg: rgba(255, 90, 110, 0.14);
+  --air-info: #8FB0FA;
+  --air-info-bg: rgba(122, 162, 247, 0.14);
+  --air-ink-chip: #F5F5F7;
+  --air-ink-chip-text: #0B0B0C;
+  --air-hover: rgba(255, 255, 255, 0.06);
+  --air-sel: color-mix(in srgb, var(--air-accent) 18%, transparent);
+  --air-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --air-shadow-overlay: 0 16px 48px rgba(0, 0, 0, 0.6);
+  --air-accent-strong: color-mix(in srgb, var(--air-accent) 62%, white);
+  --air-primary: #F5F5F7;
+  --air-on-primary: #0B0B0C;
+  --air-primary-hover: #FFFFFF;
+  --air-rule-strong: #F5F5F7;
+}

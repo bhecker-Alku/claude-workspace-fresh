@@ -1,0 +1,14 @@
+/* Jelly avatar palette . The only colors outside tokens.css, and only for avatars. */
+:root {
+  --jelly-purple: #a48be8;
+  --jelly-teal: #61c9b8;
+  --jelly-amber: #f6b65d;
+  --jelly-pink: #ee91bb;
+  --jelly-blue: #79aeef;
+  --jelly-lime: #b5ce70;
+  --jelly-ink: #29243a;
+  --jelly-shadow: #242232;
+}
+
+.jelly { display: block; flex: none; overflow: visible; filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.14)); }
+@media (prefers-reduced-motion: reduce) { .jelly, .jelly .eye { animation: none !important; } }
