@@ -58,7 +58,7 @@ export function teamupServer(from: Brain, brains: Brain[], emit: Emit, convId: s
     tools: [
       tool(
         'ask_brain',
-        `Ask another brain a question when it holds knowledge this brain does not. Available brains:\n${list}`,
+        `Ask another brain a question, or pass it notes and questions to answer (for example "send this to Victor"), when it holds knowledge or a role this brain does not. Its answer comes back here. Available brains:\n${list}`,
         { brain: z.string().describe('brain id, or the name it is called'), question: z.string() },
         async ({ brain, question }) => {
           const key = brain.toLowerCase();

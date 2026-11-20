@@ -41,6 +41,12 @@ Keep the explanation outside the block and only the copy-ready text inside it. D
 export type ImageInput = { mediaType: string; data: string };
 
 /** Plain text, or one streamed user message with the images first and the text after. */
+/** Sent with every message: how brains reach each other. The ask_brain tool can be folded away until loaded, and Claude Code's own
+ * session tools (ListAgents, SendMessage) look similar but only find terminal sessions, so brains gave up. */
+export const TEAM_NOTE = `[Workspace note, from the app, not the person: other brains are reached only with the ask_brain tool (mcp__workspace__ask_brain). If it is not loaded, load it first with ToolSearch "select:mcp__workspace__ask_brain". Use it to ask another brain anything or pass along notes and questions; its answer comes back to you here. Never look for running sessions or agents.]
+
+`;
+
 export function buildPrompt(text: string, images: ImageInput[]): string | AsyncIterable<any> {
   if (!images.length) return text;
   const message = {
@@ -81,13 +87,14 @@ export function createChat(deps: ChatDeps) {
       const blocked = deps.blocked ? await deps.blocked(brain) : [];
       const skills = deps.skillsFor ? await deps.skillsFor(brain) : undefined;
       const q = queryFn({
-        prompt: buildPrompt((conv.sessionId ? '' : DISPLAY_NOTE) + prefix + text, images),
+        prompt: buildPrompt((conv.sessionId ? '' : DISPLAY_NOTE) + TEAM_NOTE + prefix + text, images),
         options: {
           cwd: brain.path,
           model: brain.model || undefined,
           env: cleanEnv(process.env),
           settingSources: ['user', 'project', 'local'],
-          ...(blocked.length ? { disallowedTools: blocked } : {}),
+          // Claude Code's own session tools only see terminal sessions; brains reach each other with ask_brain.
+          disallowedTools: [...blocked, 'ListAgents', 'SendMessage'],
           ...(skills ? { skills } : {}),
           resume: conv.sessionId ?? undefined,
           mcpServers: deps.mcpServersFor?.(brain, convId),
