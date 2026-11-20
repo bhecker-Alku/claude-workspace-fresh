@@ -7,7 +7,7 @@ const PACK_ORDER = ['halloween', 'christmas', 'pokipals'];
 export const THEMES = [['classic', 'Classic'], ...[...PACK_ORDER, ...Object.keys(PACKS).filter((k) => !PACK_ORDER.includes(k))].filter((k) => PACKS[k]).map((k) => [k, PACKS[k].label])];
 
 // Jelly speech-bubble faces.
-export const COLORS = ['purple', 'teal', 'amber', 'pink', 'blue', 'lime'];
+export const COLORS = ['purple', 'lavender', 'indigo', 'navy', 'blue', 'sky', 'teal', 'mint', 'green', 'lime', 'yellow', 'amber', 'peach', 'coral', 'red', 'pink', 'magenta', 'brown', 'gray'];
 export const EYES = ['pill', 'oval', 'wide', 'square'];
 export const MOUTHS = ['smile', 'grin', 'smirk', 'flat'];
 export const STYLES = [['jelly', 'Pastel Jelly'], ['glass', 'Liquid Glass'], ['shadow', 'Shadow Jelly']];

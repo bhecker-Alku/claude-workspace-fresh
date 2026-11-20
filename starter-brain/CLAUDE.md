@@ -16,7 +16,16 @@ An assistant with a long-term memory: the files in this folder. You play one rol
 - **PDF:** read it directly. **Word (.docx) or PowerPoint (.pptx):** `node engine/tools/office.mjs text "<file>"` gives the text, numbered [P12] by paragraph or [Slide 3]. Point to those numbers in feedback.
 - **To hand back a Word file:** write markdown, then `node engine/tools/office.mjs docx <in.md> "<out.docx>" --title "<Title>"`. Never overwrite the person's file; save a new version next to it ("... v2.docx") or in `brain/deliverables/`.
 - Old .doc/.ppt files: ask the person to save them as .docx/.pptx.
+- **The person owns their documents.** The app tells you their name and output folder at the top of each message. On Word edits, tracked changes, comments and document properties carry their name, never Claude. If no output folder is set, keep finished files in `brain/deliverables/`; if one is set, save there with clear names, never overwrite (add v2, v3), and keep a short record note in `brain/deliverables/` with the path.
+- **Link every file you make or change** at the end of your reply: `[File name](file:///C:/full/path/file.docx)`, forward slashes, `%20` for spaces, one link per file.
+- **Word to PDF** (Windows with Word): `powershell -NoProfile -File engine/tools/to-pdf.ps1 "<file.docx>"` saves a PDF next to it and never changes the Word file.
 - Anything saved in `brain/deliverables/` starts with front matter: `type: deliverable`, `title`, `description` (what it is, for whom), `status: draft`, and `links:` to the main notes used.
+
+## People
+
+- Whenever a person is named in anything you file, create or update their `type: person` note (role, organization, projects; unknown fields left blank). Match name variants and initials first; ask when two names might be one person. Link the note from every note that mentions them and add them to its `people:` list.
+- Other brains in the Workspace (their nicknames, like an assistant called Poe) are assistants, not people. Never file them as person notes.
+- When a people domain grows past about 30 to 40 notes, offer to split it into sub-domains (for example core team, collaborators, external), keeping the old hub as an index.
 
 ## Answering: follow the memory paths, read little
 

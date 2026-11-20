@@ -24,6 +24,7 @@ import { BusyError, createChat } from './chat.ts';
 import { mentionPrefix, teamupServer } from './teamup.ts';
 import { dropMessage, saveDrop } from './files.ts';
 import { listLibrary, openFile, openWorkspaceFile } from './library.ts';
+import { personNote, readMe, saveMe, traitsNote } from './me.ts';
 import { outlookAvailable, outlookServer } from './outlook.ts';
 import type { WorkspaceEvent } from './events.ts';
 
@@ -75,7 +76,8 @@ export function createApp(opts: AppOptions) {
       const off = new Set(brain.skillsOff);
       return (await setup()).skills.map((s) => s.name).filter((n) => !off.has(n));
     },
-    beforeTurn: (brain, convId, text) => mentionPrefix(brain, brainsCache, text, emit, convId, opts.queryFn),
+    // Who the person is, where files go, and the brain's personality, then any @mentions.
+    beforeTurn: async (brain, convId, text) => personNote(await readMe(opts.dataDir)) + traitsNote(brain.traits) + (await mentionPrefix(brain, brainsCache, text, emit, convId, opts.queryFn)),
   });
 
   let restartDecided = false;
@@ -198,7 +200,7 @@ export function createApp(opts: AppOptions) {
     const b = await brainById(c.req.param('id'));
     if (!b) return c.json({ error: 'not found' }, 404);
     const body = await c.req.json().catch(() => ({}));
-    const fields = { alias: String(body.alias ?? ''), role: String(body.role ?? ''), group: String(body.group ?? ''), avatar: body.avatar, model: body.model === undefined ? undefined : String(body.model), skillsOff: body.skillsOff, appsOff: body.appsOff };
+    const fields = { alias: String(body.alias ?? ''), role: String(body.role ?? ''), group: String(body.group ?? ''), avatar: body.avatar, model: body.model === undefined ? undefined : String(body.model), skillsOff: body.skillsOff, appsOff: body.appsOff, traits: body.traits };
     if ([fields.alias, fields.role, fields.group].some((v) => v.trim().length > MAX_ALIAS)) return c.json({ error: `Keep each field under ${MAX_ALIAS} characters.` }, 400);
     await setAlias(opts.dataDir, b.id, fields);
     return c.json({ ok: true });
@@ -343,6 +345,9 @@ export function createApp(opts: AppOptions) {
     const b = await brainById(c.req.param('id'));
     return b ? c.json(await listLibrary(b)) : c.json({ error: 'not found' }, 404);
   });
+  app.post('/api/brains/:id/stop', async (c) => c.json({ stopped: await chat.stop(c.req.param('id')) }));
+  app.get('/api/me', async (c) => c.json(await readMe(opts.dataDir)));
+  app.post('/api/me', async (c) => c.json(await saveMe(opts.dataDir, await c.req.json().catch(() => ({})))));
   app.post('/api/open-file', async (c) => {
     const { path: file } = await c.req.json().catch(() => ({ path: '' }));
     try {

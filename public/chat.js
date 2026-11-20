@@ -50,7 +50,17 @@ function copyFromCard(e) {
 
 export function Thread({ items, busy, brainName, brain, onDecide }) {
   const end = useRef(null);
-  useEffect(() => end.current?.scrollIntoView({ block: 'end' }), [items.length, busy]);
+  // Follow new messages only while the person is at the bottom; scrolling up stays put.
+  const atBottomRef = useRef(true);
+  const [atBottom, setAtBottom] = useState(true);
+  const prevLen = useRef(0);
+  useEffect(() => {
+    const fresh = prevLen.current === 0 || items.length < prevLen.current || items[items.length - 1]?.type === 'user';
+    prevLen.current = items.length;
+    if (fresh || atBottomRef.current) { end.current?.scrollIntoView({ block: 'end' }); atBottomRef.current = true; setAtBottom(true); }
+  }, [items.length, busy]);
+  const onScroll = (e) => { const el = e.currentTarget; const at = el.scrollHeight - el.scrollTop - el.clientHeight < 80; atBottomRef.current = at; setAtBottom(at); };
+  const jump = () => { end.current?.scrollIntoView({ block: 'end', behavior: 'smooth' }); atBottomRef.current = true; setAtBottom(true); };
   if (!items.length && !busy) {
     return html`<div class="thread"><div class="empty">
       <div class="hero"><${Jelly} look=${brain?.avatar} size=${150} live=${true} label=${brainName} />
@@ -59,7 +69,7 @@ export function Thread({ items, busy, brainName, brain, onDecide }) {
     </div></div>`;
   }
   const grouped = group(items);
-  return html`<div class="thread" aria-live="polite"><div class="thread-inner">
+  return html`<div class="thread" aria-live="polite" onScroll=${onScroll}><div class="thread-inner">
     ${grouped.map((it) => {
       if (it.type === 'user') return html`<div class="msg user">
         ${it.previews?.length ? html`<div class="thumbs">${it.previews.map((src) => html`<img src=${src} alt="Pasted image" />`)}</div>` : null}
@@ -75,10 +85,10 @@ export function Thread({ items, busy, brainName, brain, onDecide }) {
     })}
     ${busy ? html`<${Activity} items=${items} brainName=${brainName} look=${brain?.avatar} />` : null}
     <div ref=${end}></div>
-  </div></div>`;
+  </div>${atBottom ? null : html`<button class="jump-bottom" onClick=${jump}>↓ Latest${busy ? ' (still working)' : ''}</button>`}</div>`;
 }
 
-export function Composer({ brains, brainId, brainName, busy, onSend, draft, queued = [], onUnqueue }) {
+export function Composer({ brains, brainId, brainName, busy, onSend, onStop, draft, queued = [], onUnqueue }) {
   const [text, setText] = useState('');
   const [drag, setDrag] = useState(false);
   const [pick, setPick] = useState(null);
@@ -93,6 +103,13 @@ export function Composer({ brains, brainId, brainName, busy, onSend, draft, queu
     setText(draft.text);
     requestAnimationFrame(() => { const el = input.current; if (el) { el.focus(); el.selectionStart = el.selectionEnd = el.value.length; } });
   }, [draft]);
+  // The box grows with the text up to half the window, then scrolls; it shrinks back after sending.
+  useEffect(() => {
+    const el = input.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight + 2, innerHeight * 0.5) + 'px';
+  }, [text]);
   const others = brains.filter((b) => b.id !== brainId);
   const tag = (b) => (b.alias ? b.alias.replace(/\s+/g, '') : b.id);
   const matches = pick === null ? [] : others.filter((b) => b.kind !== 'project' && [b.id, b.name, b.alias ?? ''].some((v) => v.toLowerCase().includes(pick)));
@@ -170,6 +187,7 @@ export function Composer({ brains, brainId, brainName, busy, onSend, draft, queu
         <button class="btn ghost sm" aria-label="Attach files" onClick=${() => fileInput.current?.click()}><${Icon} name="paperclip" /></button>
         <input ref=${fileInput} type="file" multiple hidden onChange=${(e) => { if (e.target.files.length) addFiles([...e.target.files]); e.target.value = ''; }} />
         <span class="hint">${busy ? 'Enter to queue. It sends when the brain is done.' : 'Enter to send, Shift+Enter for a new line'}</span>
+        ${busy && onStop ? html`<button class="btn sm stop-btn" onClick=${onStop} title=${'Stop ' + brainName}><${Icon} name="x" /> Stop</button>` : null}
         <button class="btn primary sm" disabled=${!text.trim() && !images.length && !files.length} onClick=${send}><${Icon} name="send" /> ${busy ? 'Queue' : 'Send'}</button>
       </div>
     </div>

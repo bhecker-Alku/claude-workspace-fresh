@@ -22,6 +22,10 @@ export function createApprovals(emit: Emit) {
         emit({ type: 'approval', convId, id, title, detail });
       });
     },
+    /** Deny every card still waiting in one chat (used by Stop). */
+    cancelConv(convId: string): void {
+      for (const p of [...pending.values()]) if (p.convId === convId) p.finish(false);
+    },
     resolve(id: string, allowed: boolean): boolean {
       const p = pending.get(id);
       if (!p) return false;

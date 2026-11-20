@@ -1,4 +1,4 @@
-import { html, useState } from 'https://esm.sh/htm@3.1.1/preact/standalone';
+import { html, useEffect, useState } from 'https://esm.sh/htm@3.1.1/preact/standalone';
 import { BrainAccess } from './connections.js';
 import { Icon } from './cards.js';
 import { COLORS, EYES, Jelly, MOUTHS, PACKS, resolvePack, STYLES, THEMES } from './jelly.js';
@@ -40,6 +40,11 @@ function Row({ b, active, onBrain, onEdit, onPlace }) {
 /** A sidebar section. Saved groups can be renamed and removed; every section takes dropped brains. */
 function Group({ name, saved, items, brainId, onBrain, onEdit, onMove, onPlace, onRename, onDelete }) {
   const [mode, setMode] = useState(null);
+  // Collapsed state is remembered per group on this computer. The open brain stays visible in a collapsed group.
+  const key = 'workspace.collapsed.' + name;
+  const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem(key) === '1'; } catch { return false; } });
+  const toggle = () => { const v = !collapsed; setCollapsed(v); try { localStorage.setItem(key, v ? '1' : '0'); } catch { /* private mode */ } };
+  const shown = collapsed ? items.filter((b) => b.id === brainId) : items;
   const [over, setOver] = useState(false);
   const [text, setText] = useState(name);
   const drop = (e) => {
@@ -59,14 +64,16 @@ function Group({ name, saved, items, brainId, onBrain, onEdit, onMove, onPlace, 
       : mode === 'delete'
         ? html`<div class="group-head confirm">Remove "${name}"? <button class="link" onClick=${() => { setMode(null); onDelete(name); }}>Remove</button>
             <button class="link" onClick=${() => setMode(null)}>Keep</button></div>`
-        : html`<div class="group-head"><span class="eyebrow">${name}</span>
+        : html`<div class="group-head"><button class="group-toggle eyebrow" aria-expanded=${!collapsed} title=${collapsed ? 'Show this group' : 'Hide this group'} onClick=${toggle}>
+            <span class="chev" aria-hidden="true">${collapsed ? '▸' : '▾'}</span>${name}
+            ${collapsed ? html`<span class="group-count">${items.length}</span>${items.some((b) => b.busy) ? html`<span class="chat-mark working" aria-label="Working"></span>` : null}` : null}</button>
             ${saved ? html`<button class="group-tool" aria-label=${'Rename ' + name} title="Rename group" onClick=${() => { setText(name); setMode('rename'); }}><${Icon} name="pencil" /></button>
               <button class="group-tool" aria-label=${'Remove ' + name} title="Remove group (its brains move back to Brains)" onClick=${() => setMode('delete')}><${Icon} name="x" /></button>` : null}
           </div>`}
     <div class="nav">
-      ${items.map((b) => html`<${Row} b=${b} active=${b.id === brainId} onBrain=${onBrain} onEdit=${onEdit}
+      ${shown.map((b) => html`<${Row} b=${b} active=${b.id === brainId} onBrain=${onBrain} onEdit=${onEdit}
         onPlace=${(id, targetId, after) => { setOver(false); onPlace(id, targetId, after, saved ? name : ''); }} />`)}
-      ${items.length === 0 ? html`<div class="drop-hint">Drag a brain here</div>` : null}
+      ${items.length === 0 && !collapsed ? html`<div class="drop-hint">Drag a brain here</div>` : null}
     </div>
   </section>`;
 }
@@ -103,11 +110,12 @@ function Recent({ convs, convId, onConv, onDeleteConv, onClear, onNew }) {
 }
 
 /** Bottom of the sidebar: who is signed in. Click it for the account menu. */
-function AccountMenu({ account, onApps, onBrand }) {
+function AccountMenu({ account, onMe, onApps, onBrand }) {
   const [open, setOpen] = useState(false);
   const who = String(account || 'Signed in');
   return html`<div class="account-wrap">
     ${open ? html`<div class="account-menu" role="menu" onMouseLeave=${() => setOpen(false)}>
+      <button role="menuitem" onClick=${() => { setOpen(false); onMe(); }}><${Icon} name="pencil" /> About you</button>
       <button role="menuitem" onClick=${() => { setOpen(false); onApps(); }}><${Icon} name="apps" /> Connect apps</button>
       <button role="menuitem" onClick=${() => { setOpen(false); onBrand(); }}><${Icon} name="pencil" /> Branding</button>
       <a role="menuitem" href="https://claude.ai/settings/connectors" target="_blank" rel="noreferrer" onClick=${() => setOpen(false)}><${Icon} name="sparkle" /> Claude connector settings</a>
@@ -145,7 +153,7 @@ export function Sidebar(p) {
         : null}
     </div>
     <div class="account-row">
-      <${AccountMenu} account=${account} onApps=${p.onApps} onBrand=${p.onBrand} />
+      <${AccountMenu} account=${account} onMe=${p.onMe} onApps=${p.onApps} onBrand=${p.onBrand} />
       <button class="apps-btn" aria-label="Connect apps" title="Connect apps" onClick=${p.onApps}><${Icon} name="apps" /></button>
       <button class="theme-toggle" aria-label="Switch light and dark" title="Switch light and dark" onClick=${p.onToggleTheme}><${Icon} name="moon" /></button>
     </div>
@@ -197,15 +205,48 @@ function AvatarPicker({ look, setLook, chip }) {
 /** Name, role, group and look, with a live preview. */
 const MODEL_CHOICES = [['', 'Default (Claude Code picks)'], ['opus', 'Opus: most capable'], ['sonnet', 'Sonnet: balanced'], ['haiku', 'Haiku: fastest, lightest']];
 
+/** Optional personality traits, off by default. The app tells the brain about the ones switched on. */
+const TRAIT_CHOICES = [
+  ['creative', 'Creative', 'Invents ideas, names and stories freely, never contradicting saved facts. New ideas are marked for you to accept.'],
+  ['skeptic', 'Skeptic', 'Questions claims and assumptions, flags risks and weak evidence, and says when it disagrees.'],
+];
+
+/** About you: your name (author on documents brains edit for you) and where finished files go. */
+export function AboutYou({ onClose }) {
+  const [me, setMe] = useState(null);
+  const [saved, setSaved] = useState(false);
+  useEffect(() => { fetch('/api/me').then((r) => r.json()).then(setMe, () => setMe({ name: '', outputFolder: '' })); }, []);
+  async function save(e) {
+    e.preventDefault();
+    await fetch('/api/me', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(me) });
+    setSaved(true);
+    setTimeout(onClose, 600);
+  }
+  return html`<div class="overlay" onClick=${(e) => e.target === e.currentTarget && onClose()}>
+    <form class="dialog about-you" onSubmit=${save} role="dialog" aria-modal="true" aria-label="About you">
+      <header><strong>About you</strong><span class="spacer"></span>
+        <button type="button" class="btn ghost sm" aria-label="Close" onClick=${onClose}><${Icon} name="x" /></button></header>
+      ${me ? html`
+        <label class="field">Your name<input value=${me.name} maxlength="80" placeholder="Your full name" autofocus onInput=${(e) => setMe({ ...me, name: e.target.value })} /></label>
+        <p class="hint-text">Brains put this name as the author when they edit your Word documents, so your documents stay yours.</p>
+        <label class="field">Save finished files to<input value=${me.outputFolder} maxlength="300" placeholder="For example C:\\Users\\you\\Downloads" onInput=${(e) => setMe({ ...me, outputFolder: e.target.value })} /></label>
+        <p class="hint-text">Optional. Leave empty and each brain keeps files in its own folder. Brains always link every file they make.</p>` : html`<p>Loading...</p>`}
+      <div class="actions"><button type="button" class="btn" onClick=${onClose}>Cancel</button><button class="btn primary" disabled=${!me}>${saved ? 'Saved' : 'Save'}</button></div>
+    </form>
+  </div>`;
+}
+
 export function EditBrain({ brain, onSave, onClose }) {
   const [f, setF] = useState({ alias: brain.alias || '', role: brain.role || '', group: brain.group || '', model: brain.model || '' });
   const [access, setAccess] = useState({ skillsOff: brain.skillsOff || [], appsOff: brain.appsOff || [] });
+  const [traits, setTraits] = useState(brain.traits || []);
+  const flipTrait = (t) => setTraits(traits.includes(t) ? traits.filter((x) => x !== t) : [...traits, t]);
   const [look, setLook] = useState({ ...brain.avatar });
   const [error, setError] = useState('');
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
   async function save(e) {
     e.preventDefault();
-    const r = await fetch(`/api/brains/${brain.id}/alias`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...f, avatar: look, ...access }) });
+    const r = await fetch(`/api/brains/${brain.id}/alias`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...f, avatar: look, ...access, traits }) });
     if (r.ok) onSave();
     else setError((await r.json()).error || 'Could not save.');
   }
@@ -226,6 +267,9 @@ export function EditBrain({ brain, onSave, onClose }) {
           <label class="field">Name<input value=${f.alias} onInput=${set('alias')} maxlength="40" placeholder="Edgar" autofocus /></label>
           <label class="field">Role<input value=${f.role} onInput=${set('role')} maxlength="40" placeholder="Strategy & Commercial Lead" /></label>
           <label class="field">Model<select value=${f.model} onChange=${set('model')}>${MODEL_CHOICES.map(([v, l]) => html`<option value=${v}>${l}</option>`)}</select></label>
+          <div class="field">Personality<div class="traits">${TRAIT_CHOICES.map(([t, name, what]) => html`
+            <label class="trait"><input type="checkbox" checked=${traits.includes(t)} onChange=${() => flipTrait(t)} />
+              <span><strong>${name}</strong>${what}</span></label>`)}</div></div>
           <${AvatarPicker} look=${look} setLook=${setLook} chip=${chip} />
         </div>
       </div>

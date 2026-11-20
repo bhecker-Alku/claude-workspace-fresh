@@ -10,5 +10,6 @@ description: 'Check and repair this brain - broken links, notes without descript
 3. **Freshness:** list notes with dates or deadlines already past, and drafts older than 30 days; offer to update or deprecate them.
 4. **Memory paths:** in `brain/routing.md`, remove rows that point to deprecated notes and merge overlapping rows. Keep the curated table under about 20 rows.
 5. **Tests:** run `node engine/tools/brain.mjs evals`. For each, answer the question using only the **ask** skill, then compare with its `expect:`. Report pass or fail. For each failure, use **correct** to fix the note or path.
-6. Run `refresh` again until **HEALTHY**. Log one line with the counts.
-7. Reply: health before and after (errors / warnings), tests passed, and anything that needs the person. If `node engine/tools/brain.mjs learn` shows links or paths to add, suggest **consolidate**.
+6. **People:** if a people domain holds more than about 30 to 40 person notes, offer to split it into sub-domains with the old hub kept as an index (one huge hub makes the graph unreadable).
+7. Run `refresh` again until **HEALTHY**. Log one line with the counts.
+8. Reply: health before and after (errors / warnings), tests passed, and anything that needs the person. If `node engine/tools/brain.mjs learn` shows links or paths to add, suggest **consolidate**.

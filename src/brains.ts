@@ -5,7 +5,7 @@ import path from 'node:path';
 import { parse } from 'yaml';
 import { defaultAvatar, readAliases, type Avatar } from './aliases.ts';
 
-export type Brain = { id: string; name: string; path: string; level: string; profile: string; owner: string; blurb: string; kind?: 'brain' | 'project'; alias?: string; role?: string; group?: string; avatar?: Avatar; model?: string; skillsOff?: string[]; appsOff?: string[] };
+export type Brain = { id: string; name: string; path: string; level: string; profile: string; owner: string; blurb: string; kind?: 'brain' | 'project'; alias?: string; role?: string; group?: string; avatar?: Avatar; model?: string; skillsOff?: string[]; appsOff?: string[]; traits?: string[] };
 
 function blurbFrom(startHere: string): string {
   const lines = startHere.split(/\r?\n/);
@@ -73,7 +73,7 @@ export async function allBrains(root: string, dataDir: string): Promise<Brain[]>
   const aliases = await readAliases(dataDir);
   for (const b of found) {
     const a = aliases[b.id];
-    if (a) Object.assign(b, { alias: a.alias || undefined, role: a.role || undefined, group: a.group || undefined, model: a.model || undefined, skillsOff: a.skillsOff, appsOff: a.appsOff });
+    if (a) Object.assign(b, { alias: a.alias || undefined, role: a.role || undefined, group: a.group || undefined, model: a.model || undefined, skillsOff: a.skillsOff, appsOff: a.appsOff, traits: a.traits });
     b.avatar = a?.avatar ?? defaultAvatar(b.id);
   }
   return found.sort((a, b) => (a.alias ?? a.name).localeCompare(b.alias ?? b.name));

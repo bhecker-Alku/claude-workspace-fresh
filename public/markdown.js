@@ -8,6 +8,7 @@ const WIN_FILE = /^[A-Za-z]:[\\/][^<>"|?*\n]*\.\w{1,6}$/;
 function inline(s) {
   return esc(s)
     .replace(/\[([^\]]+)\]\(file:\/\/\/?([^\s)]+)\)/g, (_, label, p) => fileLink(label, decodeURI(p)))
+    .replace(/\[([^\]]+)\]\(&lt;([A-Za-z]:[\\/][^)]*?)&gt;\)/g, (_, label, p) => fileLink(label, p))
     .replace(/`([^`]+)`/g, (_, c) => (WIN_FILE.test(c) ? `<code class="file-link" data-path="${c}" title="Click to open">${c}</code>` : `<code>${c}</code>`))
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/(^|[^*])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>')

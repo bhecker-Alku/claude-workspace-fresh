@@ -1,5 +1,6 @@
 import { readdir, stat } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
+import os from 'node:os';
 import path from 'node:path';
 import type { Brain } from './brains.ts';
 
@@ -26,12 +27,24 @@ export async function listLibrary(brain: Brain, limit = 50): Promise<LibraryItem
   return items.sort((a, b) => b.t - a.t).slice(0, limit).map(({ t, ...i }) => i);
 }
 
-/** Opens a file in the system's default app if it exists inside the given folder (the workspace). */
+const inside = (dir: string, full: string) => { const rel = path.relative(path.resolve(dir), full); return !!rel && !rel.startsWith('..') && !path.isAbsolute(rel); };
+/** Never opened from chat: anything that runs code. */
+const RUNS_CODE = /\.(exe|bat|cmd|com|ps1|psm1|vbs|vbe|js|mjs|cjs|jse|wsf|wsh|msi|msp|scr|lnk|reg|hta|cpl|jar|sh|py)$/i;
+/** Outside the workspace (Downloads, Documents...) only these document types open. */
+export const OPENABLE = /\.(docx|doc|pdf|pptx|ppt|xlsx|xls|csv|txt|md|rtf|png|jpg|jpeg|gif|sav|spv)$/i;
+
+/** Whether a chat link may open this file: inside the workspace (any non-program file), or a document in the person's own folders (never ~/.claude). */
+export function canOpen(full: string, root: string, home = os.homedir()): boolean {
+  if (!path.isAbsolute(full) || RUNS_CODE.test(full)) return false;
+  if (inside(root, full)) return true;
+  return inside(home, full) && !inside(path.join(home, '.claude'), full) && OPENABLE.test(full);
+}
+
+/** Opens a file from a chat link in the system's default app. */
 export async function openWorkspaceFile(root: string, file: string): Promise<void> {
-  const full = path.resolve(root, file.replace(/^\/([a-zA-Z])\//, '$1:/'));
-  const rel = path.relative(path.resolve(root), full);
-  if (!rel || rel.startsWith('..') || path.isAbsolute(rel)) throw new Error('That file is outside your workspace folder.');
-  if (!(await stat(full).catch(() => null))?.isFile()) throw new Error('File not found.');
+  const full = path.resolve(file.replace(/^\/([a-zA-Z])\//, '$1:/'));
+  if (!canOpen(full, root)) throw new Error("That file can't be opened from chat.");
+  if (!(await stat(full).catch(() => null))?.isFile()) throw new Error('That file is not there any more.');
   if (process.platform === 'win32') spawn('explorer.exe', [full], { detached: true, stdio: 'ignore' }).unref();
   else spawn(process.platform === 'darwin' ? 'open' : 'xdg-open', [full], { detached: true, stdio: 'ignore' }).unref();
 }

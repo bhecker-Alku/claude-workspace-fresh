@@ -1,6 +1,6 @@
 import { html, render, useEffect, useRef, useState } from 'https://esm.sh/htm@3.1.1/preact/standalone';
 import { Icon } from './cards.js';
-import { EditBrain, Sidebar, nameOf } from './sidebar.js';
+import { EditBrain, Sidebar, nameOf, AboutYou } from './sidebar.js';
 import { Jelly } from './jelly.js';
 import { Composer, Thread } from './chat.js';
 import { Library } from './library.js';
@@ -12,6 +12,9 @@ import { ContinueChat, FolderBrowser } from './folders.js';
 import { ConnectApps } from './connections.js';
 import { applyBrand, BrandDialog, logoHtml } from './brand.js';
 
+async function stopBrainRequest(brainId) {
+  return fetch(`/api/brains/${brainId}/stop`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+}
 const api = (url, body) =>
   fetch(url, body === undefined ? undefined : { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
     .then(async (r) => ({ ok: r.ok, status: r.status, data: await r.json().catch(() => ({})) }));
@@ -338,7 +341,7 @@ function App() {
   if (!session.ok) return html`<${SignIn} logo=${logo} reason=${session.reason} onRetry=${checkSession} />`;
 
   return html`<div class=${'shell' + (showLibrary && brain ? ' with-library' : '')}>
-    <${Sidebar} logo=${logo} brains=${brains.map((b) => (done.has(b.id) ? { ...b, done: true } : b))} brainId=${brainId} convs=${convs.map((c) => ({ ...c, running: workingConvs.has(c.id), unread: unread.has(c.id) }))} convId=${convId} account=${session.account} onApps=${() => setDialog('apps')} onBrand=${() => setDialog('brand')} brandName=${brand.name}
+    <${Sidebar} logo=${logo} brains=${brains.map((b) => (done.has(b.id) ? { ...b, done: true } : b))} brainId=${brainId} convs=${convs.map((c) => ({ ...c, running: workingConvs.has(c.id), unread: unread.has(c.id) }))} convId=${convId} account=${session.account} onApps=${() => setDialog('apps')} onMe=${() => setDialog('me')} onBrand=${() => setDialog('brand')} brandName=${brand.name}
       onBrain=${openBrain} onConv=${openConv} onNew=${() => { setConvId(null); setItems([]); }} onAddBrain=${addBrain} onNewBrain=${newBrainFromTemplate} onEdit=${(b) => setDialog({ edit: b })}
       groups=${groups} onMove=${(id, group) => post(`/api/brains/${id}/group`, { group })} onPlace=${placeBrain}
       onAddGroup=${(name) => post('/api/groups', { name })} onRenameGroup=${(from, to) => post('/api/groups/rename', { from, to })}
@@ -371,7 +374,7 @@ function App() {
                 busy=${Boolean(brain?.busy)} onLook=${() => { setWaiting([]); send('What is waiting on me in this brain? Take me through it, oldest first.'); }} />`
             : null}
           <${Thread} items=${items} busy=${working || (Boolean(brain?.busy) && convId !== null)} brainName=${nameOf(brain)} brain=${brain} onDecide=${decide} />
-          <${Composer} brains=${brains} brainId=${brainId} brainName=${nameOf(brain)} busy=${busy} onSend=${submit} queued=${queuedHere} onUnqueue=${(q) => setQueue((qs) => qs.filter((x) => x !== q))} draft=${draft} />`}`
+          <${Composer} brains=${brains} brainId=${brainId} brainName=${nameOf(brain)} busy=${busy} onSend=${submit} onStop=${async () => { if (!confirm(`Stop ${nameOf(brain)}? It will drop what it is doing on this request.`)) return; setQueue((qs) => qs.filter((q) => q.at !== here)); await stopBrainRequest(brainId); refreshBrains(); }} queued=${queuedHere} onUnqueue=${(q) => setQueue((qs) => qs.filter((x) => x !== q))} draft=${draft} />`}`
         : html`<div class="thread"><div class="empty">
             <${Icon} name="brain" />
             <h2>Welcome to your Workspace</h2>
@@ -381,6 +384,7 @@ function App() {
     ${showLibrary && brain ? html`<${Library} brainId=${brainId} onClose=${() => setShowLibrary(false)} />` : null}
     ${dialog?.edit ? html`<${EditBrain} brain=${dialog.edit} onSave=${() => { setDialog(null); refreshBrains(); }} onClose=${() => setDialog(null)} />` : null}
     ${dialog === 'brand' ? html`<${BrandDialog} brand=${brand} onSaved=${(b) => { useBrand(b); setDialog(null); }} onClose=${() => setDialog(null)} />` : null}
+    ${dialog === 'me' ? html`<${AboutYou} onClose=${() => setDialog(null)} />` : null}
     ${dialog === 'apps' ? html`<${ConnectApps} onClose=${() => setDialog(null)} />` : null}
     ${dialog === 'folders' ? html`<${FolderBrowser} onAdd=${added} onClose=${() => setDialog(null)} />` : null}
     ${dialog === 'continue' && brain ? html`<${ContinueChat} brainId=${brainId} onPick=${continueChat} onClose=${() => setDialog(null)} />` : null}

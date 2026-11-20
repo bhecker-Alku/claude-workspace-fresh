@@ -68,6 +68,9 @@ type Block = { type: string; text?: string; name?: string; input?: Record<string
 
 export function createChat(deps: ChatDeps) {
   const busy = new Set<string>();
+  // What is running per brain, so Stop can end it.
+  const running = new Map<string, { q?: any; controller: AbortController; convId: string; stopped: boolean }>();
+  const STOPPED = '_Stopped. Nothing more will happen on this request._';
   const queryFn = deps.queryFn ?? query;
 
   async function record(convId: string, event: Parameters<Emit>[0] | { type: 'user'; text: string }) {
@@ -79,6 +82,8 @@ export function createChat(deps: ChatDeps) {
     if (busy.has(brain.id)) throw new BusyError();
     busy.add(brain.id);
     const convId = conv.id;
+    const run = { controller: new AbortController(), convId, stopped: false } as { q?: any; controller: AbortController; convId: string; stopped: boolean };
+    running.set(brain.id, run);
     let sessionId = conv.sessionId ?? '';
     try {
       deps.emit({ type: 'step', convId, label: 'Reading your message' });
@@ -99,11 +104,13 @@ export function createChat(deps: ChatDeps) {
           resume: conv.sessionId ?? undefined,
           mcpServers: deps.mcpServersFor?.(brain, convId),
           permissionMode: 'default',
+          abortController: run.controller,
           hooks: { PreToolUse: [{ hooks: [policyHook({ brainPath: brain.path, calledIn: false }, (title, detail) => deps.approvals.request(convId, title, detail))] }] },
           // The hook above already decided; anything that still reaches the permission prompt was allowed there.
           canUseTool: async (_tool, input) => ({ behavior: 'allow', updatedInput: input }),
         },
       });
+      run.q = q;
       const info = typeof (q as any).accountInfo === 'function' ? await (q as any).accountInfo() : null;
       if (info && !isSubscription(info)) {
         await (q as any).return?.(undefined);
@@ -121,13 +128,16 @@ export function createChat(deps: ChatDeps) {
           }
         }
         if (m.type === 'result') {
-          if (m.subtype !== 'success') await record(convId, { type: 'error', convId, message: 'The brain stopped before finishing.' });
+          if (m.subtype !== 'success' && !run.stopped) await record(convId, { type: 'error', convId, message: 'The brain stopped before finishing.' });
         }
       }
+      if (run.stopped) await record(convId, { type: 'text', convId, text: STOPPED });
       await deps.store.update(convId, {});
     } catch (error) {
-      await record(convId, { type: 'error', convId, message: error instanceof Error ? error.message : String(error) });
+      if (run.stopped) await record(convId, { type: 'text', convId, text: STOPPED });
+      else await record(convId, { type: 'error', convId, message: error instanceof Error ? error.message : String(error) });
     } finally {
+      running.delete(brain.id);
       busy.delete(brain.id);
       // Sent last, so the page sees the brain as free when it hears this.
       deps.emit({ type: 'done', convId, sessionId });
@@ -139,7 +149,18 @@ export function createChat(deps: ChatDeps) {
   const idle: (() => void)[] = [];
   const onIdle = (fn: () => void) => { if (busy.size === 0) fn(); else idle.push(fn); };
 
-  return { runTurn, isBusy: (brainId: string) => busy.has(brainId), anyBusy: () => busy.size > 0, onIdle };
+  /** Stops a working brain right away. Waiting approvals in that chat are denied; files already saved stay. */
+  async function stop(brainId: string): Promise<boolean> {
+    const run = running.get(brainId);
+    if (!run || run.stopped) return false;
+    run.stopped = true;
+    deps.approvals.cancelConv(run.convId);
+    try { await Promise.race([run.q?.interrupt?.(), new Promise((r) => setTimeout(r, 3000))]); } catch { /* aborting below */ }
+    run.controller.abort();
+    return true;
+  }
+
+  return { runTurn, stop, isBusy: (brainId: string) => busy.has(brainId), anyBusy: () => busy.size > 0, onIdle };
 }
 
 type Ask = (title: string, detail: string) => Promise<boolean>;
