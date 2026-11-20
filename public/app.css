@@ -290,22 +290,25 @@ code, pre { font-family: var(--air-font-mono); font-size: var(--air-type-caption
 .edit-grid { grid-template-columns: 300px 1fr; align-items: start; }
 .edit-side { display: flex; flex-direction: column; gap: var(--air-s3); }
 .edit-side .preview { align-self: stretch; }
-.edit-brain .edit-grid { max-height: calc(92vh - 260px); padding-right: var(--air-s1); }
-.edit-brain { max-height: 94vh; }
-.personality-title { margin: var(--air-s2) 0 0; text-align: center; font-size: var(--air-type-h3); font-weight: var(--air-weight-bold); }
-.traits { display: flex; flex-direction: column; gap: var(--air-s2); }
-.trait { display: grid; grid-template-columns: auto 44px 1fr; align-items: center; gap: var(--air-s3); padding: var(--air-s3); border: 1px solid var(--air-border); border-radius: var(--air-radius-surface); background: var(--air-surface); cursor: pointer; transition: border-color var(--air-fast) var(--air-ease), background var(--air-fast) var(--air-ease); }
+/* Edit brain fits on one screen: no inner scrollbar. The dialog only scrolls on very small windows. */
+.edit-brain .edit-grid { overflow: visible; gap: var(--air-s4); }
+.edit-brain { max-height: 96vh; padding-top: var(--air-s4); padding-bottom: var(--air-s4); gap: var(--air-s3); }
+.edit-side .preview { padding: var(--air-s3); gap: 0; }
+.edit-side .preview-name { margin-top: var(--air-s2); }
+.personality-title { margin: var(--air-s1) 0 0; text-align: center; font-size: var(--air-type-lead); font-weight: var(--air-weight-bold); }
+.traits { display: flex; flex-direction: column; gap: 6px; }
+.trait { display: grid; grid-template-columns: auto 36px 1fr; align-items: center; gap: var(--air-s2); padding: var(--air-s2) var(--air-s3); border: 1px solid var(--air-border); border-radius: var(--air-radius-surface); background: var(--air-surface); cursor: pointer; transition: border-color var(--air-fast) var(--air-ease), background var(--air-fast) var(--air-ease); }
 .trait:hover { border-color: var(--air-accent); }
 .trait.on { border-color: var(--air-accent); background: var(--air-sel); }
 .trait input { width: 18px; height: 18px; margin: 0; accent-color: var(--air-accent); cursor: pointer; }
-.trait-icon { width: 44px; height: 44px; border-radius: var(--air-radius-control); display: grid; place-items: center; }
-.trait-icon svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.trait-icon { width: 36px; height: 36px; border-radius: var(--air-radius-control); display: grid; place-items: center; }
+.trait-icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .trait-rigid .trait-icon { background: var(--air-info-bg); color: var(--air-info); }
 .trait-creative .trait-icon { background: color-mix(in srgb, var(--jelly-purple) 18%, transparent); color: color-mix(in srgb, var(--jelly-purple) 75%, var(--air-text)); }
 .trait-skeptic .trait-icon { background: var(--air-ok-bg); color: var(--air-ok); }
 .trait-text { display: flex; flex-direction: column; gap: 2px; padding-left: var(--air-s3); border-left: 1px solid var(--air-border); }
-.trait-text strong { font-size: var(--air-type-lead); color: var(--air-text); }
-.trait-text span { font-size: var(--air-type-caption); color: var(--air-muted); line-height: 1.35; }
+.trait-text strong { font-size: var(--air-type-body); color: var(--air-text); }
+.trait-text span { font-size: var(--air-type-caption); color: var(--air-muted); line-height: 1.3; }
 .model-row { display: flex; align-items: center; gap: var(--air-s3); font-size: var(--air-type-caption); color: var(--air-muted); font-weight: var(--air-weight-bold); }
 .model-select { flex: 1; display: flex; align-items: center; gap: var(--air-s2); height: var(--air-control-h); padding: 0 var(--air-s3); border: 1px solid var(--air-accent); border-radius: var(--air-radius-control); background: var(--air-surface); color: var(--air-accent); }
 .model-select select { flex: 1; border: 0; outline: 0; background: transparent; color: var(--air-text); font: inherit; font-size: var(--air-type-body); cursor: pointer; }
@@ -460,3 +463,8 @@ code, pre { font-family: var(--air-font-mono); font-size: var(--air-type-caption
 .brand-colors label { display: flex; align-items: center; gap: var(--air-s2); font-size: var(--air-type-caption); }
 .brand-colors input[type=color] { width: 36px; height: 28px; border: 1px solid var(--air-border); border-radius: var(--air-radius-control); padding: 0; background: none; cursor: pointer; }
 .brand-dialog .danger { color: var(--air-danger); margin-right: auto; }
+
+/* Edit brain: fits one screen, no scrollbar (scrolls only on very small windows). */
+.dialog.edit-brain { max-height: 96vh; overflow: auto; scrollbar-width: none; }
+.dialog.edit-brain::-webkit-scrollbar { display: none; }
+.dialog.edit-brain .actions { position: sticky; bottom: calc(-1 * var(--air-s4)); background: var(--air-surface); padding: var(--air-s2) 0; }

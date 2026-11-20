@@ -261,7 +261,7 @@ export function EditBrain({ brain, onSave, onClose }) {
       <div class="edit-grid">
         <div class="edit-side">
         <div class="preview">
-          <${Jelly} look=${look} size=${150} live=${true} label=${'Preview of ' + (f.alias || nameOf(brain))} />
+          <${Jelly} look=${look} size=${112} live=${true} label=${'Preview of ' + (f.alias || nameOf(brain))} />
           <div class="preview-name">${f.alias || nameOf(brain)}</div>
           <div class="preview-role">${f.role || 'Role'}</div>
         </div>
