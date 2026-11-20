@@ -207,8 +207,9 @@ const MODEL_CHOICES = [['', 'Default (Claude Code picks)'], ['opus', 'Opus: most
 
 /** Optional personality traits, off by default. The app tells the brain about the ones switched on. */
 const TRAIT_CHOICES = [
-  ['creative', 'Creative', 'Invents ideas, names and stories freely, never contradicting saved facts. New ideas are marked for you to accept.'],
-  ['skeptic', 'Skeptic', 'Questions claims and assumptions, flags risks and weak evidence, and says when it disagrees.'],
+  ['rigid', 'Rigid', 'Prefers clear rules, consistency, and structure.', '<path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 12.5 9 5 9-5"/><path d="m3 17 9 5 9-5"/>'],
+  ['creative', 'Creative', 'Enjoys exploring new ideas and imaginative solutions.', '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.3 1.1 2.1V16h5v-.1c0-.8.4-1.6 1.1-2.1A6 6 0 0 0 12 3Z"/>'],
+  ['skeptic', 'Skeptic', 'Questions assumptions and looks for evidence first.', '<circle cx="11" cy="11" r="7.5"/><path d="m21 21-4.6-4.6"/><path d="M9.2 9.2a1.9 1.9 0 1 1 2.7 1.7c-.6.3-.9.8-.9 1.4v.3"/><path d="M11 15h.01"/>'],
 ];
 
 /** About you: your name (author on documents brains edit for you) and where finished files go. */
@@ -258,18 +259,24 @@ export function EditBrain({ brain, onSave, onClose }) {
       <header><strong>Edit ${nameOf(brain)}</strong><span class="spacer"></span>
         <button type="button" class="btn ghost sm" aria-label="Close" onClick=${onClose}><${Icon} name="x" /></button></header>
       <div class="edit-grid">
+        <div class="edit-side">
         <div class="preview">
           <${Jelly} look=${look} size=${150} live=${true} label=${'Preview of ' + (f.alias || nameOf(brain))} />
           <div class="preview-name">${f.alias || nameOf(brain)}</div>
           <div class="preview-role">${f.role || 'Role'}</div>
         </div>
+          <h3 class="personality-title">Personality</h3>
+          <div class="traits" role="group" aria-label="Personality">${TRAIT_CHOICES.map(([t, name, what, icon]) => html`
+            <label class=${'trait trait-' + t + (traits.includes(t) ? ' on' : '')}>
+              <input type="checkbox" checked=${traits.includes(t)} onChange=${() => flipTrait(t)} />
+              <span class="trait-icon" aria-hidden="true"><svg viewBox="0 0 24 24" dangerouslySetInnerHTML=${{ __html: icon }}></svg></span>
+              <span class="trait-text"><strong>${name}</strong><span>${what}</span></span></label>`)}</div>
+          <label class="model-row"><span>Model</span><span class="model-select"><${Icon} name="sparkle" />
+            <select value=${f.model} onChange=${set('model')}>${MODEL_CHOICES.map(([v, l]) => html`<option value=${v}>${l}</option>`)}</select></span></label>
+        </div>
         <div class="edit-fields">
           <label class="field">Name<input value=${f.alias} onInput=${set('alias')} maxlength="40" placeholder="Edgar" autofocus /></label>
           <label class="field">Role<input value=${f.role} onInput=${set('role')} maxlength="40" placeholder="Strategy & Commercial Lead" /></label>
-          <label class="field">Model<select value=${f.model} onChange=${set('model')}>${MODEL_CHOICES.map(([v, l]) => html`<option value=${v}>${l}</option>`)}</select></label>
-          <div class="field">Personality<div class="traits">${TRAIT_CHOICES.map(([t, name, what]) => html`
-            <label class="trait"><input type="checkbox" checked=${traits.includes(t)} onChange=${() => flipTrait(t)} />
-              <span><strong>${name}</strong>${what}</span></label>`)}</div></div>
           <${AvatarPicker} look=${look} setLook=${setLook} chip=${chip} />
         </div>
       </div>

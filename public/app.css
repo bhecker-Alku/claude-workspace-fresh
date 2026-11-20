@@ -286,10 +286,29 @@ code, pre { font-family: var(--air-font-mono); font-size: var(--air-type-caption
 .group-toggle { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
 .group-toggle .chev { display: inline-block; width: 10px; }
 .group-toggle .group-count { opacity: .8; font-variant-numeric: tabular-nums; margin-left: 4px; }
+.edit-brain { width: min(980px, 100%); }
+.edit-grid { grid-template-columns: 300px 1fr; align-items: start; }
+.edit-side { display: flex; flex-direction: column; gap: var(--air-s3); }
+.edit-side .preview { align-self: stretch; }
+.edit-brain .edit-grid { max-height: calc(92vh - 260px); padding-right: var(--air-s1); }
+.edit-brain { max-height: 94vh; }
+.personality-title { margin: var(--air-s2) 0 0; text-align: center; font-size: var(--air-type-h3); font-weight: var(--air-weight-bold); }
 .traits { display: flex; flex-direction: column; gap: var(--air-s2); }
-.trait { display: flex; gap: var(--air-s2); align-items: flex-start; cursor: pointer; font-size: var(--air-type-caption); color: var(--air-muted); }
-.trait strong { color: var(--air-text); margin-right: 6px; }
-.trait input { margin-top: 3px; }
+.trait { display: grid; grid-template-columns: auto 44px 1fr; align-items: center; gap: var(--air-s3); padding: var(--air-s3); border: 1px solid var(--air-border); border-radius: var(--air-radius-surface); background: var(--air-surface); cursor: pointer; transition: border-color var(--air-fast) var(--air-ease), background var(--air-fast) var(--air-ease); }
+.trait:hover { border-color: var(--air-accent); }
+.trait.on { border-color: var(--air-accent); background: var(--air-sel); }
+.trait input { width: 18px; height: 18px; margin: 0; accent-color: var(--air-accent); cursor: pointer; }
+.trait-icon { width: 44px; height: 44px; border-radius: var(--air-radius-control); display: grid; place-items: center; }
+.trait-icon svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.trait-rigid .trait-icon { background: var(--air-info-bg); color: var(--air-info); }
+.trait-creative .trait-icon { background: color-mix(in srgb, var(--jelly-purple) 18%, transparent); color: color-mix(in srgb, var(--jelly-purple) 75%, var(--air-text)); }
+.trait-skeptic .trait-icon { background: var(--air-ok-bg); color: var(--air-ok); }
+.trait-text { display: flex; flex-direction: column; gap: 2px; padding-left: var(--air-s3); border-left: 1px solid var(--air-border); }
+.trait-text strong { font-size: var(--air-type-lead); color: var(--air-text); }
+.trait-text span { font-size: var(--air-type-caption); color: var(--air-muted); line-height: 1.35; }
+.model-row { display: flex; align-items: center; gap: var(--air-s3); font-size: var(--air-type-caption); color: var(--air-muted); font-weight: var(--air-weight-bold); }
+.model-select { flex: 1; display: flex; align-items: center; gap: var(--air-s2); height: var(--air-control-h); padding: 0 var(--air-s3); border: 1px solid var(--air-accent); border-radius: var(--air-radius-control); background: var(--air-surface); color: var(--air-accent); }
+.model-select select { flex: 1; border: 0; outline: 0; background: transparent; color: var(--air-text); font: inherit; font-size: var(--air-type-body); cursor: pointer; }
 .about-you { width: min(520px, 100%); display: flex; flex-direction: column; gap: var(--air-s3); }
 .about-you .hint-text { margin: calc(-1 * var(--air-s2)) 0 0; color: var(--air-muted); font-size: var(--air-type-caption); }
 .group { border-radius: var(--air-radius-surface); padding: var(--air-s1) 0; transition: background var(--air-fast) var(--air-ease); }

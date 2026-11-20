@@ -55,7 +55,7 @@ export async function setAlias(dataDir: string, id: string, input: Partial<Alias
   const model = input.model === undefined ? all[id]?.model : String(input.model);
   if (model && (MODELS as readonly string[]).includes(model)) next.model = model;
   const traits = input.traits === undefined ? all[id]?.traits : input.traits;
-  const cleanTraits = Array.isArray(traits) ? [...new Set(traits.filter((t): t is string => t === 'creative' || t === 'skeptic'))].sort() : [];
+  const cleanTraits = Array.isArray(traits) ? [...new Set(traits.filter((t): t is string => t === 'rigid' || t === 'creative' || t === 'skeptic'))].sort() : [];
   if (cleanTraits.length) next.traits = cleanTraits;
   for (const k of ['skillsOff', 'appsOff'] as const) {
     const v = input[k] === undefined ? all[id]?.[k] : input[k];
