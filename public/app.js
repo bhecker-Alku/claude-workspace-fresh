@@ -188,7 +188,7 @@ function App() {
       if (e.type === 'restarting') { onLeaving(e.mode || 'restart', e.waiting); return; }
       if (e.convId && ['step', 'text', 'approval', 'teamup'].includes(e.type)) setConvWorking(e.convId, true);
       if (e.type === 'done' || e.type === 'error') {
-        refreshBrains(); refreshConvs();
+        refreshBrains(); refreshConvs(); window.dispatchEvent(new Event('workspace:usage'));
         if (e.convId) { setConvWorking(e.convId, false); if (e.convId !== convRef.current) markUnread(e.convId, true); }
       }
       if (e.convId !== convRef.current) return;

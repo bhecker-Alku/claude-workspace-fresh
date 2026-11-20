@@ -14,6 +14,7 @@ import { listFolders } from './folders.ts';
 import { MAX_ALIAS, setAlias } from './aliases.ts';
 import { importBrand, readBrand, removeBrand, saveBrand } from './brand.ts';
 import { newBrain } from '../scripts/new-brain.mjs';
+import { readUsage, type Usage } from './usage.ts';
 import { blockedTools, readDisabled, readStatus, setEnabled, toolPrefix, type Connection, type Setup } from './connections.ts';
 import { addGroup, deleteGroup, listGroups, moveToGroup, readOrder, renameGroup, saveOrder, sortByOrder } from './groups.ts';
 import { listClaudeSessions, readClaudeSession } from './sessions.ts';
@@ -346,6 +347,17 @@ export function createApp(opts: AppOptions) {
     return b ? c.json(await listLibrary(b)) : c.json({ error: 'not found' }, 404);
   });
   app.post('/api/brains/:id/stop', async (c) => c.json({ stopped: await chat.stop(c.req.param('id')) }));
+  // Plan usage for the sidebar. Checked at most every 2 minutes; asking costs no usage.
+  let usageCache: { at: number; usage: Usage } | null = null;
+  let usageBusy: Promise<Usage> | null = null;
+  app.get('/api/usage', async (c) => {
+    const fresh = c.req.query('refresh') === '1' ? 20_000 : 120_000;
+    if (!usageCache || Date.now() - usageCache.at > fresh) {
+      usageBusy ??= readUsage(process.cwd(), opts.queryFn).finally(() => (usageBusy = null));
+      usageCache = { at: Date.now(), usage: await usageBusy };
+    }
+    return c.json({ usage: usageCache.usage });
+  });
   app.get('/api/me', async (c) => c.json(await readMe(opts.dataDir)));
   app.post('/api/me', async (c) => c.json(await saveMe(opts.dataDir, await c.req.json().catch(() => ({})))));
   app.post('/api/open-file', async (c) => {

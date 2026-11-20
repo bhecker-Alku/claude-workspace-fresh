@@ -468,3 +468,15 @@ code, pre { font-family: var(--air-font-mono); font-size: var(--air-type-caption
 .dialog.edit-brain { max-height: 96vh; overflow: auto; scrollbar-width: none; }
 .dialog.edit-brain::-webkit-scrollbar { display: none; }
 .dialog.edit-brain .actions { position: sticky; bottom: calc(-1 * var(--air-s4)); background: var(--air-surface); padding: var(--air-s2) 0; }
+
+/* Plan usage, bottom of the sidebar */
+.usage { padding: var(--air-s3) var(--air-s4); border-top: 1px solid var(--air-border); display: flex; flex-direction: column; gap: var(--air-s2); }
+.usage-head { font-size: var(--air-type-caption); font-weight: var(--air-weight-bold); text-transform: uppercase; letter-spacing: .04em; color: var(--air-muted); }
+.usage-head span { text-transform: none; letter-spacing: 0; }
+.usage-line { display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: var(--air-s2); font-size: var(--air-type-caption); }
+.usage-line strong { min-width: 34px; text-align: right; }
+.usage-bar { display: block; height: 6px; border-radius: 3px; background: var(--air-border); overflow: hidden; }
+.usage-fill { display: block; height: 100%; border-radius: 3px; background: var(--air-ok); transition: width var(--air-fast) var(--air-ease); }
+.usage-fill.mid { background: var(--air-warn); }
+.usage-fill.high { background: var(--air-danger); }
+.usage-reset { font-size: var(--air-type-caption); color: var(--air-muted); }

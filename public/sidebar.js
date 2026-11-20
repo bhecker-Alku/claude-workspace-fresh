@@ -109,6 +109,34 @@ function Recent({ convs, convId, onConv, onDeleteConv, onClear, onNew }) {
     </div>`;
 }
 
+/** Plan usage (5-hour and weekly limits). Hidden when the plan has none or Claude Code can't say. */
+function resetText(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const time = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return d.toDateString() === new Date().toDateString() ? `resets ${time}` : `resets ${d.toLocaleDateString([], { weekday: 'short' })} ${time}`;
+}
+
+export function UsagePanel() {
+  const [usage, setUsage] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    const load = (refresh) => fetch('/api/usage' + (refresh ? '?refresh=1' : '')).then((r) => r.json()).then((d) => alive && setUsage(d.usage || null)).catch(() => {});
+    load(false);
+    const timer = setInterval(() => load(false), 5 * 60_000);
+    const after = () => load(true);
+    window.addEventListener('workspace:usage', after);
+    return () => { alive = false; clearInterval(timer); window.removeEventListener('workspace:usage', after); };
+  }, []);
+  if (!usage) return null;
+  return html`<div class="usage" aria-label="Plan usage">
+    <div class="usage-head">Usage${usage.plan ? html` <span>${usage.plan}</span>` : ''}</div>
+    ${usage.windows.map((w) => html`<div class="usage-row">
+      <div class="usage-line"><span>${w.label}</span><span class="usage-bar"><span class=${'usage-fill' + (w.used >= 90 ? ' high' : w.used >= 70 ? ' mid' : '')} style=${{ width: w.used + '%' }}></span></span><strong>${w.used}%</strong></div>
+      <div class="usage-reset">${resetText(w.resetsAt)}</div></div>`)}
+  </div>`;
+}
+
 /** Bottom of the sidebar: who is signed in. Click it for the account menu. */
 function AccountMenu({ account, onMe, onApps, onBrand }) {
   const [open, setOpen] = useState(false);
@@ -152,6 +180,7 @@ export function Sidebar(p) {
         ? html`<${Recent} convs=${convs} convId=${convId} onConv=${p.onConv} onDeleteConv=${p.onDeleteConv} onClear=${p.onClearConvs} onNew=${p.onNew} />`
         : null}
     </div>
+    <${UsagePanel} />
     <div class="account-row">
       <${AccountMenu} account=${account} onMe=${p.onMe} onApps=${p.onApps} onBrand=${p.onBrand} />
       <button class="apps-btn" aria-label="Connect apps" title="Connect apps" onClick=${p.onApps}><${Icon} name="apps" /></button>
