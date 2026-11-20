@@ -6,7 +6,8 @@ import path from 'node:path';
 const pub = path.resolve('public');
 
 test('no hex colors and no text under 12px in app css and js', async () => {
-  const files = (await readdir(pub)).filter((f) => f === 'app.css' || f.endsWith('.js'));
+  // jelly-packs.js is avatar artwork (like jelly.css): its costume colors are the drawings themselves.
+  const files = (await readdir(pub)).filter((f) => f === 'app.css' || (f.endsWith('.js') && f !== 'jelly-packs.js'));
   assert.ok(files.includes('app.css') && files.includes('app.js'), 'app.css and app.js exist');
   for (const f of files) {
     const text = await readFile(path.join(pub, f), 'utf8');

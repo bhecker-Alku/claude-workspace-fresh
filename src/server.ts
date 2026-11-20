@@ -24,6 +24,7 @@ import { BusyError, createChat } from './chat.ts';
 import { mentionPrefix, teamupServer } from './teamup.ts';
 import { dropMessage, saveDrop } from './files.ts';
 import { listLibrary, openFile, openWorkspaceFile } from './library.ts';
+import { outlookAvailable, outlookServer } from './outlook.ts';
 import type { WorkspaceEvent } from './events.ts';
 
 type AppOptions = { brainsRoot: string; dataDir: string; queryFn?: typeof query; restartFn?: () => void; shutdownFn?: () => void; codeDir?: string };
@@ -67,7 +68,7 @@ export function createApp(opts: AppOptions) {
   const brainById = async (id: string) => (await brains()).find((b) => b.id === id);
   const chat = createChat({
     store, approvals, emit, queryFn: opts.queryFn,
-    mcpServersFor: (brain, convId) => ({ workspace: teamupServer(brain, brainsCache, emit, convId) }),
+    mcpServersFor: (brain, convId) => ({ workspace: teamupServer(brain, brainsCache, emit, convId), ...(outlookAvailable() ? { outlook: outlookServer() } : {}) }),
     blocked: async (brain) => [...(await blockedTools(opts.dataDir)), ...(brain.appsOff ?? []).map(toolPrefix)],
     skillsFor: async (brain) => {
       if (!brain.skillsOff?.length) return undefined;
@@ -159,6 +160,8 @@ export function createApp(opts: AppOptions) {
       const s = await setup(Boolean(c.req.query('refresh')));
       const off = new Set(await readDisabled(opts.dataDir));
       const items: Connection[] = s.connections.map((x) => ({ ...x, enabled: !off.has(x.name) }));
+      // Outlook on this PC (read-only), built into the app rather than a Claude connector.
+      if (outlookAvailable()) items.unshift({ name: 'outlook', label: 'Outlook (this PC, read-only)', status: 'connected', scope: 'local', tools: 5, enabled: !off.has('outlook') });
       return c.json({ items, skills: s.skills, checkedAt: connCache!.at });
     } catch (e) {
       return c.json({ error: 'Could not check connections: ' + (e instanceof Error ? e.message : String(e)) }, 500);

@@ -5,7 +5,9 @@ export const COLORS = ['purple', 'teal', 'amber', 'pink', 'blue', 'lime'] as con
 export const EYES = ['pill', 'oval', 'wide', 'square'] as const;
 export const MOUTHS = ['smile', 'grin', 'smirk', 'flat'] as const;
 export const STYLES = ['jelly', 'glass', 'shadow'] as const;
-export type Avatar = { color: string; eyes: string; mouth: string; style: string };
+export type Avatar = { color: string; eyes: string; mouth: string; style: string; theme?: string; character?: string; packEyes?: string; packMouth?: string };
+/** Themed avatar packs (public/jelly-packs.js draws them). Character and pack eye/mouth names are checked there. */
+export const THEMES = ['christmas', 'halloween', 'pokipals'] as const;
 /** Models a brain can run on; '' means Claude Code's own default. */
 export const MODELS = ['', 'opus', 'sonnet', 'haiku'] as const;
 export type Alias = { alias: string; role: string; group: string; avatar?: Avatar; model?: string; skillsOff?: string[]; appsOff?: string[] };
@@ -27,6 +29,10 @@ function cleanAvatar(input: unknown, previous: Avatar): Avatar {
     eyes: pick(a.eyes, EYES, previous.eyes),
     mouth: pick(a.mouth, MOUTHS, previous.mouth),
     style: pick(a.style, STYLES, previous.style),
+    // A themed pack look; the classic choices above stay underneath so going back to Classic restores them.
+    ...(typeof a.theme === 'string' && (THEMES as readonly string[]).includes(a.theme)
+      ? { theme: a.theme, ...Object.fromEntries((['character', 'packEyes', 'packMouth'] as const).filter((k) => typeof a[k] === 'string' && /^[a-z]{1,24}$/i.test(a[k] as string)).map((k) => [k, a[k] as string])) }
+      : {}),
   };
 }
 

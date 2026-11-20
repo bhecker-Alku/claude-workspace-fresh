@@ -259,6 +259,21 @@ code, pre { font-family: var(--air-font-mono); font-size: var(--air-type-caption
 .chip { border: 1px solid var(--air-border); background: var(--air-surface); color: var(--air-text); border-radius: 999px; padding: var(--air-s1) var(--air-s3); min-height: var(--air-control-h-sm); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: var(--air-type-caption); }
 .chip.on { border-color: var(--air-accent); background: var(--air-sel); }
 .swatch { width: 20px; height: 20px; border-radius: 50%; display: block; }
+/* Avatar theme picker: a segmented control, then a grid of characters for a themed pack. */
+.theme-tabs { display: flex; gap: 2px; padding: 3px; border: 1px solid var(--air-border); border-radius: 999px; background: var(--air-sunken); width: fit-content; }
+.theme-tab { display: inline-flex; align-items: center; gap: var(--air-s2); padding: 2px var(--air-s3) 2px 4px; border: 0; border-radius: 999px; background: none; color: var(--air-muted); font: inherit; font-size: var(--air-type-caption); cursor: pointer; transition: background var(--air-fast) var(--air-ease), color var(--air-fast) var(--air-ease); }
+.theme-tab:hover { color: var(--air-text); }
+.theme-tab.on { background: var(--air-surface); color: var(--air-text); box-shadow: var(--air-shadow); font-weight: var(--air-weight-bold); }
+.theme-tab .jelly { filter: none; }
+.character-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: var(--air-s2); }
+.character { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: var(--air-s2) var(--air-s1); border: 1px solid var(--air-border); border-radius: var(--air-radius-control); background: var(--air-surface); color: var(--air-text); font: inherit; font-size: var(--air-type-caption); cursor: pointer; transition: border-color var(--air-fast) var(--air-ease), background var(--air-fast) var(--air-ease); }
+.character:hover { border-color: var(--air-accent); }
+.character.on { border-color: var(--air-accent); background: var(--air-sel); }
+.character span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.face-chip { width: 46px; height: 40px; padding: 0; overflow: hidden; }
+.jelly.zoomed { overflow: hidden; filter: none; }
+/* In the editor every option stays fully visible; the selected one is marked by its border and fill. */
+.edit-fields .chip[aria-pressed="false"] { opacity: 1; }
 .hero { display: flex; flex-direction: column; align-items: center; gap: var(--air-s2); }
 .hero .role { color: var(--air-muted); }
 .topbar .jelly { margin-right: var(--air-s1); }

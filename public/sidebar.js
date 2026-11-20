@@ -1,7 +1,7 @@
 import { html, useState } from 'https://esm.sh/htm@3.1.1/preact/standalone';
 import { BrainAccess } from './connections.js';
 import { Icon } from './cards.js';
-import { COLORS, EYES, Jelly, MOUTHS, STYLES } from './jelly.js';
+import { COLORS, EYES, Jelly, MOUTHS, PACKS, resolvePack, STYLES, THEMES } from './jelly.js';
 
 export const nameOf = (b) => b.alias || b.name;
 const groupOf = (b) => b.group || (b.kind === 'project' ? 'Projects' : 'Brains');
@@ -154,6 +154,46 @@ export function Sidebar(p) {
 
 const label = (s) => s[0].toUpperCase() + s.slice(1);
 
+/**
+ * The look: a theme (Classic or a pack), then only the choices that theme and character really have.
+ * Classic: style, color, eyes, mouth. A pack: a character, then eyes and mouth only when there is a choice
+ * (a pack with one mouth, or a character with no mouth, shows no mouth row).
+ */
+function AvatarPicker({ look, setLook, chip }) {
+  const theme = PACKS[look.theme] ? look.theme : 'classic';
+  const themed = resolvePack(look);
+  // Switching theme keeps the classic choices underneath, so going back to Classic restores them.
+  const pickTheme = (t) => setLook(t === 'classic' ? { ...look, theme: undefined } : { ...look, theme: t, character: look.theme === t ? look.character : PACKS[t].characters[0].id, packEyes: undefined, packMouth: undefined });
+  const sample = (t) => (t === 'classic' ? { ...look, theme: undefined } : { theme: t, character: (look.theme === t && look.character) || PACKS[t].characters[0].id });
+  const option = (key, value, current, preview, title) => html`<button type="button" class=${'chip face-chip' + (current === value ? ' on' : '')}
+    aria-pressed=${current === value} title=${title} aria-label=${title} onClick=${() => setLook({ ...look, [key]: value })}>${preview}</button>`;
+
+  const themes = html`<div class="field">Theme<div class="theme-tabs" role="radiogroup" aria-label="Avatar theme">${THEMES.map(([t, l]) => html`
+    <button type="button" role="radio" aria-checked=${theme === t} class=${'theme-tab' + (theme === t ? ' on' : '')} onClick=${() => pickTheme(t)}>
+      <${Jelly} look=${sample(t)} size=${26} /><span>${l}</span></button>`)}</div></div>`;
+
+  if (!themed) {
+    return html`${themes}
+      <div class="field">Style<div class="chips">${STYLES.map(([v, l]) => chip('style', v, l, l))}</div></div>
+      <div class="field">Color<div class="chips">${COLORS.map((c) => chip('color', c, html`<span class="swatch" style=${`background:var(--jelly-${c})`}></span>`, label(c)))}</div></div>
+      <div class="field">Eyes<div class="chips">${EYES.map((e) => chip('eyes', e, html`<${Jelly} look=${{ ...look, eyes: e }} size=${34} zoom=${true} />`, label(e), ' face-chip'))}</div></div>
+      <div class="field">Mouth<div class="chips">${MOUTHS.map((m) => chip('mouth', m, html`<${Jelly} look=${{ ...look, mouth: m }} size=${34} zoom=${true} />`, label(m), ' face-chip'))}</div></div>`;
+  }
+
+  const { pack, character, eyes, mouth } = themed;
+  const eyeChoices = Object.entries(pack.eyes);
+  const mouthChoices = character.mouth === null ? [] : Object.entries(pack.mouths);
+  return html`${themes}
+    <div class="field">Character<div class="character-grid">${pack.characters.map((c) => html`
+      <button type="button" class=${'character' + (c.id === character.id ? ' on' : '')} aria-pressed=${c.id === character.id}
+        onClick=${() => setLook({ ...look, character: c.id, packEyes: undefined, packMouth: undefined })}>
+        <${Jelly} look=${{ theme: look.theme, character: c.id }} size=${48} /><span>${c.name}</span></button>`)}</div></div>
+    ${eyeChoices.length > 1 ? html`<div class="field">Eyes<div class="chips">${eyeChoices.map(([k, [name]]) =>
+      option('packEyes', k, eyes, html`<${Jelly} look=${{ ...look, packEyes: k }} size=${34} zoom=${true} />`, name))}</div></div>` : null}
+    ${mouthChoices.length > 1 ? html`<div class="field">Mouth<div class="chips">${mouthChoices.map(([k, [name]]) =>
+      option('packMouth', k, mouth, html`<${Jelly} look=${{ ...look, packMouth: k }} size=${34} zoom=${true} />`, name))}</div></div>` : null}`;
+}
+
 /** Name, role, group and look, with a live preview. */
 const MODEL_CHOICES = [['', 'Default (Claude Code picks)'], ['opus', 'Opus: most capable'], ['sonnet', 'Sonnet: balanced'], ['haiku', 'Haiku: fastest, lightest']];
 
@@ -169,7 +209,7 @@ export function EditBrain({ brain, onSave, onClose }) {
     if (r.ok) onSave();
     else setError((await r.json()).error || 'Could not save.');
   }
-  const chip = (key, value, content, title) => html`<button type="button" class=${'chip' + (look[key] === value ? ' on' : '')}
+  const chip = (key, value, content, title, extra = '') => html`<button type="button" class=${'chip' + extra + (look[key] === value ? ' on' : '')}
     aria-pressed=${look[key] === value} title=${title} onClick=${() => setLook({ ...look, [key]: value })}>${content}</button>`;
 
   return html`<div class="overlay" onClick=${(e) => e.target === e.currentTarget && onClose()}>
@@ -186,10 +226,7 @@ export function EditBrain({ brain, onSave, onClose }) {
           <label class="field">Name<input value=${f.alias} onInput=${set('alias')} maxlength="40" placeholder="Edgar" autofocus /></label>
           <label class="field">Role<input value=${f.role} onInput=${set('role')} maxlength="40" placeholder="Strategy & Commercial Lead" /></label>
           <label class="field">Model<select value=${f.model} onChange=${set('model')}>${MODEL_CHOICES.map(([v, l]) => html`<option value=${v}>${l}</option>`)}</select></label>
-          <div class="field">Style<div class="chips">${STYLES.map(([v, l]) => chip('style', v, l, l))}</div></div>
-          <div class="field">Color<div class="chips">${COLORS.map((c) => chip('color', c, html`<span class="swatch" style=${`background:var(--jelly-${c})`}></span>`, label(c)))}</div></div>
-          <div class="field">Eyes<div class="chips">${EYES.map((e) => chip('eyes', e, html`<${Jelly} look=${{ ...look, eyes: e }} size=${32} />`, label(e)))}</div></div>
-          <div class="field">Mouth<div class="chips">${MOUTHS.map((m) => chip('mouth', m, html`<${Jelly} look=${{ ...look, mouth: m }} size=${32} />`, label(m)))}</div></div>
+          <${AvatarPicker} look=${look} setLook=${setLook} chip=${chip} />
         </div>
       </div>
       <${BrainAccess} skillsOff=${access.skillsOff} appsOff=${access.appsOff} onChange=${(c) => setAccess({ ...access, ...c })} />

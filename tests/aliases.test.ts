@@ -78,3 +78,11 @@ test('a brain keeps its model; saving without one leaves it, an unknown one is d
   await setAlias(d, 'b', { alias: 'Bo2', model: '' });
   assert.equal((await readAliases(d)).b.model, undefined);
 });
+
+test('a themed avatar keeps its pack, character and choices; bad values are dropped', async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), 'alias-theme-'));
+  await setAlias(dataDir, 'practice-brain', { alias: 'Edgar', avatar: { color: 'teal', eyes: 'pill', mouth: 'smile', style: 'jelly', theme: 'halloween', character: 'pumpkin', packMouth: 'carved' } });
+  assert.deepEqual((await readAliases(dataDir))['practice-brain'].avatar, { color: 'teal', eyes: 'pill', mouth: 'smile', style: 'jelly', theme: 'halloween', character: 'pumpkin', packMouth: 'carved' });
+  await setAlias(dataDir, 'practice-brain', { alias: 'Edgar', avatar: { color: 'teal', eyes: 'pill', mouth: 'smile', style: 'jelly', theme: 'easter', character: '<script>' } as any });
+  assert.deepEqual((await readAliases(dataDir))['practice-brain'].avatar, { color: 'teal', eyes: 'pill', mouth: 'smile', style: 'jelly' });
+});

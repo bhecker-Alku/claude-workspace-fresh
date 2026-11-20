@@ -41,6 +41,9 @@ test('code inside a command is not read as saving a file', () => {
   assert.equal(bash('echo hi > /elsewhere/out.txt'), 'ask');
   assert.equal(bash("cat > /elsewhere/out.txt <<'EOF'\nhi\nEOF"), 'ask');
 });
+test('Outlook read-only tools do not ask', () => {
+  for (const t of ['list_emails', 'search_emails', 'read_email', 'list_folders', 'list_calendar']) assert.equal(decide(`mcp__outlook__${t}`, {}, ctx), 'allow', t);
+});
 test('small built-in tools do not ask', () => {
   for (const t of ['TaskStop', 'AskUserQuestion', 'Monitor']) assert.equal(decide(t, {}, ctx), 'allow', t);
 });
