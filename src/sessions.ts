@@ -4,7 +4,9 @@ import path from 'node:path';
 
 /** Claude Code keeps each folder's chats in ~/.claude/projects/<folder with every non-alphanumeric character as a dash>. */
 export function claudeProjectDir(folder: string, home = os.homedir()): string {
-  return path.join(home, '.claude', 'projects', path.resolve(folder).replace(/[^A-Za-z0-9]/g, '-'));
+  // A second Workspace on another account sets CLAUDE_CONFIG_DIR; follow it.
+  const config = process.env.CLAUDE_CONFIG_DIR || path.join(home, '.claude');
+  return path.join(config, 'projects', path.resolve(folder).replace(/[^A-Za-z0-9]/g, '-'));
 }
 
 type Line = { type?: string; isMeta?: boolean; isSidechain?: boolean; message?: { content?: unknown } };
