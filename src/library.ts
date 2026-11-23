@@ -37,7 +37,7 @@ export const OPENABLE = /\.(docx|doc|pdf|pptx|ppt|xlsx|xls|csv|txt|md|rtf|png|jp
 export function canOpen(full: string, root: string, home = os.homedir()): boolean {
   if (!path.isAbsolute(full) || RUNS_CODE.test(full)) return false;
   if (inside(root, full)) return true;
-  return inside(home, full) && !inside(path.join(home, '.claude'), full) && !(process.env.CLAUDE_CONFIG_DIR && inside(process.env.CLAUDE_CONFIG_DIR, full)) && OPENABLE.test(full);
+  return inside(home, full) && !inside(path.join(home, '.claude'), full) && OPENABLE.test(full);
 }
 
 /** Opens a file from a chat link in the system's default app. */
